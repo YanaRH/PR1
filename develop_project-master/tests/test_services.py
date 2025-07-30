@@ -1,7 +1,8 @@
 import pandas as pd
 
+
 # Получаем тестовый DataFrame
-def get_test_data():
+def get_test_data() -> pd.DataFrame:
     """Возвращает тестовый DataFrame"""
     test_data = [
         {
@@ -52,12 +53,19 @@ def get_test_data():
     ]
     return pd.DataFrame(test_data)
 
+
 # Локальная реализация функции простого поиска
-def simple_search(df, query):
+def simple_search(df: pd.DataFrame, query: str) -> list:
     """Ищет записи в DataFrame по описанию"""
     if not query:
         return []
+
+    # Проверка на наличие столбца "Описание"
+    if "Описание" not in df.columns:
+        return []
+
     return df[df['Описание'].str.contains(query, na=False)].to_dict(orient='records')
+
 
 def test_services_works():
     """Тестирование функции простой поиск в обычных условиях"""
@@ -117,9 +125,18 @@ def test_services_works():
     result = simple_search(my_list, "Ozon.ru")
     assert result == expected_df.to_dict(orient='records')
 
+
 def test_services_empty_attribute():
     """Тестирование функции простой поиск, с пустыми атрибутами """
     my_list = get_test_data()  # Получаем тестовые данные
     empty_list = pd.DataFrame()  # Пустой DataFrame
     assert simple_search(empty_list, "Ozon.ru") == []
     assert simple_search(my_list, "") == []
+
+
+# Запуск тестов
+if __name__ == "__main__":
+    test_services_works()
+    test_services_empty_attribute()
+    print("Все тесты пройдены успешно.")
+

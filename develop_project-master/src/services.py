@@ -3,7 +3,7 @@ import logging
 import pandas as pd  # Импортируем pandas
 
 # Импортируем декоратор из текущего пакета
-from .decorators import decorator_search  # Относительный импорт
+from decorators import decorator_search  # Абсолютный импорт
 
 # Настройка логирования
 logger = logging.getLogger("services")
@@ -12,7 +12,6 @@ file_formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
-
 
 @decorator_search
 def simple_search(transactions: pd.DataFrame, string_search: str) -> str:
@@ -38,6 +37,7 @@ def simple_search(transactions: pd.DataFrame, string_search: str) -> str:
     data_json = json.dumps(result, indent=4, ensure_ascii=False)
 
     return data_json
+
 
 
 

@@ -12,16 +12,25 @@ file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
+
 def log_spending_by_category(filename: str) -> Callable:
     """Логирует результат функции в указанный файл."""
+
     def decorator(func: Callable) -> Callable:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             result = func(*args, **kwargs)
-            with open(filename, "w", encoding="utf-8") as f:
-                json.dump(result, f, indent=4, ensure_ascii=False)
+            # Проверка на корректность результата перед записью в файл
+            if isinstance(result, list):
+                with open(filename, "w", encoding="utf-8") as f:
+                    json.dump(result, f, indent=4, ensure_ascii=False)
+            else:
+                logger.error("Результат функции не является списком, не записываем в файл.")
             return result
+
         return wrapper
+
     return decorator
+
 
 @log_spending_by_category("spending_by_category.json")
 def spending_by_category(
@@ -54,7 +63,14 @@ def spending_by_category(
         (transactions["Категория"] == category) &
         (transactions["Дата платежа"] >= date_start) &
         (transactions["Дата платежа"] <= date_end)
-    ]
+        ]
 
     logger.info("Завершение работы функции")
-    return filtered_transactions[["Сумма платежа", "Дата платежа", "Категория"]].to_dict(orient='records')
+    result = filtered_transactions[["Сумма платежа", "Дата платежа", "Категория"]].to_dict(orient='records')
+
+    # Проверка на корректность результата
+    if not result:
+        logger.warning("Нет транзакций для данной категории и периода.")
+
+    return result
+

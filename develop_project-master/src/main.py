@@ -3,50 +3,6 @@ import logging
 from pathlib import Path
 import pandas as pd  # Импортируем pandas для работы с DataFrame
 
-
-# Заглушки для функций
-def currency_rates(currency):
-    return {}
-
-
-def for_each_card(transactions):
-    return []
-
-
-def get_price_stock(stocks):
-    return {}
-
-
-def greetings():
-    return "Добро пожаловать!"
-
-
-def read_excel(file_path):
-    return pd.read_excel(file_path, engine='openpyxl')  # Чтение Excel файла в DataFrame
-
-
-def top_five_transaction(transactions):
-    return []
-
-
-# Функция для фильтрации транзакций по дате
-def filter_by_date(start_date: str, end_date: str, transactions: pd.DataFrame) -> pd.DataFrame:
-    """Фильтрация транзакций по заданному диапазону дат."""
-    if transactions.empty:
-        return transactions  # Если DataFrame пустой, возвращаем его
-
-    # Преобразуем строки дат в формат datetime
-    start_date = pd.to_datetime(start_date, errors='coerce')
-    end_date = pd.to_datetime(end_date, errors='coerce')
-
-    if pd.isna(start_date) or pd.isna(end_date):
-        raise ValueError("Некорректный формат даты")
-
-    # Фильтруем транзакции по диапазону дат
-    filtered_transactions = transactions[(transactions['date'] >= start_date) & (transactions['date'] <= end_date)]
-    return filtered_transactions
-
-
 # Настройка логирования
 logger = logging.getLogger("utils.log")
 file_handler = logging.FileHandler("main.log", "w")
@@ -55,13 +11,78 @@ file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
+# Чтение Excel файла в DataFrame
+def read_excel(file_path: str) -> pd.DataFrame:
+    """Чтение Excel файла и возврат DataFrame."""
+    try:
+        return pd.read_excel(file_path, engine='openpyxl')
+    except FileNotFoundError:
+        logger.error(f"Файл не найден: {file_path}")
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при чтении файла {file_path}: {e}")
+        raise
+
+# Функция для получения курсов валют
+def currency_rates(currency: list) -> dict:
+    """Возвращает курсы валют."""
+    rates = {curr: 1.0 for curr in currency}  # Замените на реальную логику получения курсов
+    return rates
+
+# Функция для обработки транзакций и получения информации по картам
+def for_each_card(transactions: pd.DataFrame) -> list:
+    """Возвращает список уникальных карт из транзакций."""
+    if 'card_number' not in transactions.columns:
+        logger.warning("Столбец 'card_number' отсутствует в DataFrame.")
+        return []
+    cards = transactions['card_number'].unique().tolist()
+    return cards
+
+# Функция для получения цен акций
+def get_price_stock(stocks: list) -> dict:
+    """Возвращает цены акций."""
+    prices = {stock: 100.0 for stock in stocks}  # Замените на реальную логику получения цен акций
+    return prices
+
+# Функция приветствия
+def greetings() -> str:
+    """Возвращает приветственное сообщение."""
+    return "Добро пожаловать!"
+
+# Функция для получения топ-5 транзакций
+def top_five_transaction(transactions: pd.DataFrame) -> list:
+    """Возвращает топ-5 транзакций по сумме."""
+    if 'amount' not in transactions.columns:
+        logger.warning("Столбец 'amount' отсутствует в DataFrame.")
+        return []
+    top_transactions = transactions.nlargest(5, 'amount')
+    return top_transactions.to_dict(orient='records')
+
+# Функция для фильтрации транзакций по дате
+def filter_by_date(start_date: str, end_date: str, transactions: pd.DataFrame) -> pd.DataFrame:
+    """Фильтрация транзакций по заданному диапазону дат."""
+    if transactions.empty:
+        logger.warning("DataFrame пустой.")
+        return transactions  # Если DataFrame пустой, возвращаем его
+
+    # Преобразуем строки дат в формат datetime
+    start_date = pd.to_datetime(start_date, errors='coerce')
+    end_date = pd.to_datetime(end_date, errors='coerce')
+
+    if pd.isna(start_date) or pd.isna(end_date):
+        logger.error("Некорректный формат даты")
+        raise ValueError("Некорректный формат даты")
+
+    # Фильтруем транзакции по диапазону дат
+    filtered_transactions = transactions[(transactions['date'] >= start_date) & (transactions['date'] <= end_date)]
+    return filtered_transactions
+
 # Путь к файлу
 file_path = str(Path(__file__).resolve().parent.parent / "data" / "operations.xlsx")
 data_frame = read_excel(file_path)
 
-
-def main(start_date: str, end_date: str, df_transactions: pd.DataFrame, stocks: list, currency: list):
-    """Функция создающая JSON ответ для страницы главная"""
+def main(start_date: str, end_date: str, df_transactions: pd.DataFrame, stocks: list, currency: list) -> str:
+    """Функция создающая JSON ответ для страницы главная."""
     logger.info("Начало работы главной функции (main)")
     final_list = filter_by_date(start_date, end_date, df_transactions)
     greeting = greetings()
@@ -84,3 +105,5 @@ def main(start_date: str, end_date: str, df_transactions: pd.DataFrame, stocks: 
     )
     logger.info("Завершение работы главной функции (main)")
     return date_json
+
+

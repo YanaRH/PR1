@@ -1,8 +1,7 @@
 import pandas as pd
 
-
 # Получаем тестовый DataFrame
-def get_test_data():
+def get_test_data() -> pd.DataFrame:
     """Возвращает тестовый DataFrame"""
     test_data = [
         {'Дата платежа': '01.11.2021', 'Статус': 'OK', 'Сумма платежа': -228.0, 'Валюта платежа': 'RUB',
@@ -14,17 +13,17 @@ def get_test_data():
     ]
     return pd.DataFrame(test_data)
 
-
 # Фильтр по дате - локальная реализация
-def filter_by_date(date, df):
+def filter_by_date(date: str, df: pd.DataFrame) -> pd.DataFrame:
     """Фильтрует DataFrame по дате"""
     if not date:
         return pd.DataFrame()
     try:
-        return df[df['Дата платежа'] == date]
-    except:
+        filtered_df = df[df['Дата платежа'] == date].reset_index(drop=True)
+        return filtered_df
+    except KeyError as e:
+        print(f"Ошибка: {str(e)} - Столбец не найден в DataFrame")
         return pd.DataFrame()
-
 
 def test_filter_by_date():
     """Тестирование фильтрации по дате"""
@@ -42,8 +41,7 @@ def test_filter_by_date():
     result = filter_by_date("01.11.2021", test_df)
     pd.testing.assert_frame_equal(result, expected_df)
 
-
-def test_filter_by_date_emp_att():
+def test_filter_by_date_empty_attribute():
     """Тестирование обработки пустых значений"""
     test_df = get_test_data()
     empty_df = pd.DataFrame()
@@ -52,4 +50,11 @@ def test_filter_by_date_emp_att():
     assert not filter_by_date("01.11.2021", test_df).empty
     assert filter_by_date("01.11.2021", empty_df).empty
     assert filter_by_date("", empty_df).empty
+
+# Запуск тестов
+if __name__ == "__main__":
+    test_filter_by_date()
+    test_filter_by_date_empty_attribute()
+    print("Все тесты пройдены успешно.")
+
 
