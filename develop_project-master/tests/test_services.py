@@ -60,8 +60,8 @@ def simple_search(df: pd.DataFrame, query: str) -> list:
     if not query:
         return []
 
-    # Проверка на наличие столбца "Описание"
-    if "Описание" not in df.columns:
+    # Проверяем, есть ли столбец "Описание"
+    if 'Описание' not in df.columns:
         return []
 
     return df[df['Описание'].str.contains(query, na=False)].to_dict(orient='records')
@@ -118,12 +118,9 @@ def test_services_works():
         }
     ]
 
-    # Преобразуем ожидаемый результат в DataFrame для сравнения
-    expected_df = pd.DataFrame(expected_result)
-
     # Сравниваем результат функции с ожидаемым результатом
     result = simple_search(my_list, "Ozon.ru")
-    assert result == expected_df.to_dict(orient='records')
+    assert result == expected_result, f"Expected {expected_result}, but got {result}"
 
 
 def test_services_empty_attribute():
@@ -134,9 +131,21 @@ def test_services_empty_attribute():
     assert simple_search(my_list, "") == []
 
 
+def test_services_no_matches():
+    """Тестирование функции простой поиск, когда нет совпадений"""
+    my_list = get_test_data()  # Получаем тестовые данные
+    assert simple_search(my_list, "Неизвестный товар") == []
+
+
 # Запуск тестов
 if __name__ == "__main__":
     test_services_works()
     test_services_empty_attribute()
+    test_services_no_matches()
     print("Все тесты пройдены успешно.")
+
+
+
+
+
 

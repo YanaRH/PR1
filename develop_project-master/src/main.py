@@ -23,12 +23,6 @@ def read_excel(file_path: str) -> pd.DataFrame:
         logger.error(f"Ошибка при чтении файла {file_path}: {e}")
         raise
 
-# Функция для получения курсов валют
-def currency_rates(currency: list) -> dict:
-    """Возвращает курсы валют."""
-    rates = {curr: 1.0 for curr in currency}  # Замените на реальную логику получения курсов
-    return rates
-
 # Функция для обработки транзакций и получения информации по картам
 def for_each_card(transactions: pd.DataFrame) -> list:
     """Возвращает список уникальных карт из транзакций."""
@@ -37,12 +31,6 @@ def for_each_card(transactions: pd.DataFrame) -> list:
         return []
     cards = transactions['card_number'].unique().tolist()
     return cards
-
-# Функция для получения цен акций
-def get_price_stock(stocks: list) -> dict:
-    """Возвращает цены акций."""
-    prices = {stock: 100.0 for stock in stocks}  # Замените на реальную логику получения цен акций
-    return prices
 
 # Функция приветствия
 def greetings() -> str:
@@ -81,22 +69,18 @@ def filter_by_date(start_date: str, end_date: str, transactions: pd.DataFrame) -
 file_path = str(Path(__file__).resolve().parent.parent / "data" / "operations.xlsx")
 data_frame = read_excel(file_path)
 
-def main(start_date: str, end_date: str, df_transactions: pd.DataFrame, stocks: list, currency: list) -> str:
+def main(start_date: str, end_date: str, df_transactions: pd.DataFrame) -> str:
     """Функция создающая JSON ответ для страницы главная."""
     logger.info("Начало работы главной функции (main)")
     final_list = filter_by_date(start_date, end_date, df_transactions)
     greeting = greetings()
     cards = for_each_card(final_list)
     top_trans = top_five_transaction(final_list)
-    stocks_prices = get_price_stock(stocks)
-    currency_r = currency_rates(currency)
     logger.info("Создание JSON ответа")
     result = [{
         "greeting": greeting,
         "cards": cards,
         "top_transactions": top_trans,
-        "currency_rates": currency_r,
-        "stock_prices": stocks_prices,
     }]
     date_json = json.dumps(
         result,
@@ -105,5 +89,7 @@ def main(start_date: str, end_date: str, df_transactions: pd.DataFrame, stocks: 
     )
     logger.info("Завершение работы главной функции (main)")
     return date_json
+
+
 
 
