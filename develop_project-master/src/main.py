@@ -2,6 +2,8 @@ import json
 import logging
 from pathlib import Path
 import pandas as pd  # Импортируем pandas для работы с DataFrame
+import http.client  # Импортируем http.client для работы с HTTP-запросами
+import urllib.parse  # Импортируем urllib для кодирования URL
 
 # Настройка логирования
 logger = logging.getLogger("utils.log")
@@ -10,7 +12,6 @@ file_formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
-
 
 # Чтение Excel файла в DataFrame
 def read_excel(file_path: str) -> pd.DataFrame:
@@ -24,7 +25,6 @@ def read_excel(file_path: str) -> pd.DataFrame:
         logger.error(f"Ошибка при чтении файла {file_path}: {e}")
         raise
 
-
 # Функция для обработки транзакций и получения информации по картам
 def for_each_card(transactions: pd.DataFrame) -> list:
     """Возвращает список уникальных карт из транзакций."""
@@ -34,7 +34,6 @@ def for_each_card(transactions: pd.DataFrame) -> list:
     cards = transactions['card_number'].unique().tolist()
     return cards
 
-
 # Функция для получения топ-5 транзакций
 def top_five_transaction(transactions: pd.DataFrame) -> list:
     """Возвращает топ-5 транзакций по сумме."""
@@ -43,7 +42,6 @@ def top_five_transaction(transactions: pd.DataFrame) -> list:
         return []
     top_transactions = transactions.nlargest(5, 'amount')
     return top_transactions.to_dict(orient='records')
-
 
 # Функция для фильтрации транзакций по дате
 def filter_by_date(start_date: str, end_date: str, transactions: pd.DataFrame) -> pd.DataFrame:
@@ -64,33 +62,60 @@ def filter_by_date(start_date: str, end_date: str, transactions: pd.DataFrame) -
     filtered_transactions = transactions[(transactions['date'] >= start_date) & (transactions['date'] <= end_date)]
     return filtered_transactions
 
-
 # Функция для получения информации о текущих акциях
 def get_stock_info() -> dict:
     """Возвращает информацию о текущих акциях."""
-    # Здесь должна быть логика получения данных о акциях
-    # Пример данных
-    return {
-        "AAPL": {"price": 150.00, "change": "+1.5%"},
-        "GOOGL": {"price": 2800.00, "change": "-0.5%"},
-    }
+    conn = http.client.HTTPSConnection("api.example.com")
+    url = "/stocks"  # Замените на реальный путь API
+    try:
+        conn.request("GET", url)
+        response = conn.getresponse()
+        if response.status != 200:
+            logger.error(f"Ошибка при получении данных о акциях: {response.status} {response.reason}")
+            return {}
 
+        stock_data = json.loads(response.read().decode())  # Предполагается, что API возвращает JSON
+
+        # Пример обработки данных, измените в соответствии с форматом ответа API
+        return {
+            stock['symbol']: {
+                "price": stock['price'],
+                "change": stock['change']
+            } for stock in stock_data
+        }
+    except Exception as e:
+        logger.error(f"Ошибка при получении данных о акциях: {e}")
+        return {}
+    finally:
+        conn.close()
 
 # Функция для получения текущих валютных курсов
 def get_currency_rates() -> dict:
     """Возвращает текущие валютные курсы."""
-    # Здесь должна быть логика получения данных о валютных курсах
-    # Пример данных
-    return {
-        "USD": 74.50,
-        "EUR": 88.00,
-    }
+    conn = http.client.HTTPSConnection("api.example.com")
+    url = "/currency"  # Замените на реальный путь API
+    try:
+        conn.request("GET", url)
+        response = conn.getresponse()
+        if response.status != 200:
+            logger.error(f"Ошибка при получении данных о валютных курсах: {response.status} {response.reason}")
+            return {}
 
+        currency_data = json.loads(response.read().decode())  # Предполагается, что API возвращает JSON
+
+        # Пример обработки данных, измените в соответствии с форматом ответа API
+        return {
+            currency['code']: currency['rate'] for currency in currency_data
+        }
+    except Exception as e:
+        logger.error(f"Ошибка при получении данных о валютных курсах: {e}")
+        return {}
+    finally:
+        conn.close()
 
 # Путь к файлу
 file_path = str(Path(__file__).resolve().parent.parent / "data" / "operations.xlsx")
 data_frame = read_excel(file_path)
-
 
 def main(start_date: str, end_date: str, df_transactions: pd.DataFrame) -> str:
     """Функция создающая JSON ответ для страницы главная."""
@@ -119,5 +144,6 @@ def main(start_date: str, end_date: str, df_transactions: pd.DataFrame) -> str:
     )
     logger.info("Завершение работы главной функции (main)")
     return date_json
+
 
 
