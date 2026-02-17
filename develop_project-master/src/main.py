@@ -157,25 +157,20 @@ def top_five_transaction(transactions: pd.DataFrame) -> list:
     return top_transactions.to_dict(orient='records')
 
 
-# Функция для фильтрации транзакций по дате
-def filter_by_date(start_date: str, end_date: str, transactions: pd.DataFrame) -> pd.DataFrame:
-    """Фильтрация транзакций по заданному диапазону дат."""
-    if transactions.empty:
-        logger.warning("DataFrame пустой.")
-        return transactions  # Если DataFrame пустой, возвращаем его
+def filter_by_date(start_date, end_date, transactions):
+    column_name = 'Дата операции'
+    if column_name not in transactions.columns:
+        print("Столбец 'Дата операции' не найден. Доступные столбцы:", list(transactions.columns))
+        raise KeyError("Столбец 'Дата операции' отсутствует.")
 
-    # Преобразуем строки дат в формат datetime
-    start_date = pd.to_datetime(start_date, errors='coerce')
-    end_date = pd.to_datetime(end_date, errors='coerce')
+    # Исправленный парсинг для формата гггг-мм-дд
+    transactions[column_name] = pd.to_datetime(transactions[column_name], format='%Y-%m-%d', errors='coerce')
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
 
-    if pd.isna(start_date) or pd.isna(end_date):
-        logger.error("Некорректный формат даты")
-        raise ValueError("Некорректный формат даты")
-
-    # Фильтруем транзакции по диапазону дат
-    filtered_transactions = transactions[(transactions['date'] >= start_date) & (transactions['date'] <= end_date)]
+    filtered_transactions = transactions[
+        (transactions[column_name] >= start_date) & (transactions[column_name] <= end_date)]
     return filtered_transactions
-
 
 # Путь к файлу
 file_path = str(Path(__file__).resolve().parent.parent / "data" / "operations.xlsx")
